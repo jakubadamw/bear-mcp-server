@@ -17,7 +17,9 @@ pub struct BearMcpServer {
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 pub struct SearchRequest {
     #[schemars(description = "search query")]
-    pub query: String,
+    pub query: Option<String>,
+    #[schemars(description = "tag")]
+    pub tag: Option<String>,
 }
 
 #[tool_router]
@@ -30,32 +32,21 @@ impl BearMcpServer {
         })
     }
 
-    #[tool(description = "List all notes")]
-    async fn get_notes(&self) -> std::result::Result<CallToolResult, McpError> {
-        #[derive(serde::Serialize)]
-        struct NotesResponse<T> {
-            notes: T,
-        }
-
-        let database = self.bear_database.lock().await;
-        let notes = database.get_notes().await?;
-        let response = NotesResponse { notes };
-        Ok(CallToolResult::success(vec![Content::json(&response)?]))
-    }
-
     #[tool(description = "Search all notes")]
-    async fn search_notes(
+    async fn list_notes(
         &self,
-        Parameters(SearchRequest { query }): Parameters<SearchRequest>,
+        Parameters(SearchRequest { query, tag }): Parameters<SearchRequest>,
     ) -> std::result::Result<CallToolResult, McpError> {
         #[derive(serde::Serialize)]
         struct NotesResponse<T> {
             notes: T,
         }
 
+        let tag_noramlized = tag.as_deref().map(|tag| tag.trim_start_matches('#'));
+
         let database = self.bear_database.lock().await;
         let notes = database
-            .get_notes_like(&query)
+            .list_notes(query.as_deref(), tag_noramlized)
             .await?;
         let response = NotesResponse { notes };
         Ok(CallToolResult::success(vec![Content::json(&response)?]))
@@ -69,7 +60,7 @@ impl BearMcpServer {
         }
 
         let database = self.bear_database.lock().await;
-        let tags = database.get_tags().await?;
+        let tags = database.list_tags().await?;
         let response = TagsResponse { tags };
         Ok(CallToolResult::success(vec![Content::json(&response)?]))
     }

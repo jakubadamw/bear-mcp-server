@@ -45,39 +45,30 @@ impl BearDatabase {
         Ok(Self { pool })
     }
 
-    pub async fn get_notes(&self) -> Result<Vec<Note>> {
-        Ok(sqlx::query_as!(
-            Note,
-            "SELECT
-                ZCREATIONDATE AS 'creation_date!: AppleCoreDateTime',
-                ZSUBTITLE AS subtitle,
-                ZTEXT AS text,
-                ZTITLE AS title,
-                ZUNIQUEIDENTIFIER AS 'id!'
-             FROM
-                ZSFNOTE
-             WHERE
-                ZARCHIVED = 0",
-        )
-        .fetch_all(&self.pool)
-        .await?)
-    }
+    pub async fn list_notes(&self, query: Option<&str>, tag: Option<&str>) -> Result<Vec<Note>> {
+        let search_pattern: Option<String> = query.map(|query| format!("%{query}%"));
+        let search_pattern_str = search_pattern.as_deref();
 
-    pub async fn get_notes_like(&self, like: &str) -> Result<Vec<Note>> {
-        let search_pattern = format!("%{like}%");
-        let search_pattern_str = search_pattern.as_str();
         Ok(sqlx::query_as!(
             Note,
             "SELECT
-                ZCREATIONDATE AS 'creation_date!: AppleCoreDateTime',
-                ZSUBTITLE AS subtitle,
-                ZTEXT AS text,
-                ZTITLE AS title,
-                ZUNIQUEIDENTIFIER AS 'id!'
-             FROM
-                ZSFNOTE 
-             WHERE
-                ZARCHIVED = 0 AND (ZTEXT LIKE ? OR ZTITLE LIKE ?)",
+                notes.ZCREATIONDATE AS 'creation_date!: AppleCoreDateTime',
+                notes.ZSUBTITLE AS subtitle,
+                notes.ZTEXT AS text,
+                notes.ZTITLE AS title,
+                notes.ZUNIQUEIDENTIFIER AS 'id!'
+            FROM 
+                ZSFNOTE notes
+            LEFT JOIN 
+                Z_5TAGS note_tags ON notes.Z_PK = note_tags.Z_5NOTES
+            INNER JOIN 
+                ZSFNOTETAG tags ON tags.Z_PK = note_tags.Z_13TAGS
+            WHERE 
+                (? IS NULL OR tags.ZTITLE = ?)
+                AND (? IS NULL OR notes.ZTEXT LIKE ? OR notes.ZTITLE LIKE ?)",
+            tag,
+            tag,
+            search_pattern_str,
             search_pattern_str,
             search_pattern_str
         )
@@ -85,7 +76,7 @@ impl BearDatabase {
         .await?)
     }
 
-    pub async fn get_tags(&self) -> Result<Vec<String>> {
+    pub async fn list_tags(&self) -> Result<Vec<String>> {
         Ok(sqlx::query_as!(
             Tag,
             "SELECT
