@@ -25,7 +25,7 @@ echo "mcptools output:"
 echo "$TOOLS_OUTPUT"
 
 # Check for expected tools.
-EXPECTED_TOOLS=("get_notes" "search_notes" "list_tags")
+EXPECTED_TOOLS=("list_notes" "list_tags")
 EXIT_CODE=0
 
 for tool in "${EXPECTED_TOOLS[@]}"; do
