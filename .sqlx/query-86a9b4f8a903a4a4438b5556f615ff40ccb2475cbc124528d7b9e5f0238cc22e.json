@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n                ZTITLE AS 'title!'\n            FROM\n                ZSFNOTETAG",
+  "describe": {
+    "columns": [
+      {
+        "name": "title!",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "86a9b4f8a903a4a4438b5556f615ff40ccb2475cbc124528d7b9e5f0238cc22e"
+}

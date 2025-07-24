@@ -1,0 +1,29 @@
+[package]
+name = "bear-mcp-server"
+version = "0.1.0"
+edition = "2024"
+authors = ["Jacob Adam <software@jacobadam.net>"]
+license = "ISC"
+description = "A Model Context Protocol server for Bear.app"
+homepage = "https://github.com/jakubadamw/bear-mcp-server"
+repository = "https://github.com/jakubadamw/bear-mcp-server"
+documentation = "https://github.com/jakubadamw/bear-mcp-server"
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1"
+chrono = "0.4"
+dirs = "6"
+dotenv = "0.15"
+futures = "0.3"
+rmcp = { version = "0.3", features = ["server", "transport-io"] }
+rmcp-macros = "0.3"
+schemars = "1"
+serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.8", features = ["chrono", "runtime-tokio-rustls", "sqlite"] }
+structopt = "0.3"
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
