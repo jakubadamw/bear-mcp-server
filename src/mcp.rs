@@ -1,7 +1,7 @@
 use crate::bear::BearDatabase;
 use rmcp::{
     ErrorData as McpError,
-    handler::server::tool::{Parameters, ToolRouter},
+    handler::server::{tool::ToolRouter, wrapper::Parameters},
     model::*,
     tool, tool_handler, tool_router,
 };

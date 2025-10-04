@@ -8,6 +8,7 @@ use futures as _;
 use rmcp_macros as _;
 use schemars as _;
 use serde as _;
+use serde_json as _;
 use sqlx as _;
 use structopt as _;
 use thiserror as _;
