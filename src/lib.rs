@@ -5,6 +5,7 @@ use async_trait as _;
 use dirs as _;
 use dotenv as _;
 use futures as _;
+use futures_util as _;
 use rmcp_macros as _;
 use structopt as _;
 use tracing as _;

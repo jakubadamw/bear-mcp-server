@@ -52,25 +52,45 @@ impl BearDatabase {
         Ok(sqlx::query_as!(
             Note,
             "SELECT
-                notes.ZCREATIONDATE AS 'creation_date!: AppleCoreDateTime',
-                notes.ZSUBTITLE AS subtitle,
-                notes.ZTEXT AS text,
-                notes.ZTITLE AS title,
-                notes.ZUNIQUEIDENTIFIER AS 'id!'
-            FROM 
-                ZSFNOTE notes
-            LEFT JOIN 
-                Z_5TAGS note_tags ON notes.Z_PK = note_tags.Z_5NOTES
-            INNER JOIN 
-                ZSFNOTETAG tags ON tags.Z_PK = note_tags.Z_13TAGS
-            WHERE 
-                (? IS NULL OR tags.ZTITLE = ?)
-                AND (? IS NULL OR notes.ZTEXT LIKE ? OR notes.ZTITLE LIKE ?)",
-            tag,
-            tag,
+                creation_date AS 'creation_date!: AppleCoreDateTime',
+                subtitle,
+                text,
+                title,
+                id AS 'id!'
+            FROM (
+                SELECT
+                    notes.ZCREATIONDATE AS creation_date,
+                    notes.ZSUBTITLE AS subtitle,
+                    notes.ZTEXT AS text,
+                    notes.ZTITLE AS title,
+                    notes.ZUNIQUEIDENTIFIER AS id,
+                    (
+                        CASE
+                            WHEN ? IS NULL THEN 1.0
+                            WHEN notes.ZTITLE = ? THEN 0.75
+                            WHEN notes.ZTITLE LIKE ? THEN 0.5
+                            WHEN notes.ZTEXT LIKE ? THEN 0.25
+                            ELSE 0.0
+                        END
+                    ) AS text_search_score
+                FROM 
+                    ZSFNOTE notes
+                LEFT JOIN 
+                    Z_5TAGS note_tags ON notes.Z_PK = note_tags.Z_5NOTES
+                INNER JOIN 
+                    ZSFNOTETAG tags ON tags.Z_PK = note_tags.Z_13TAGS
+                WHERE 
+                    (? IS NULL OR tags.ZTITLE = ?)
+                    AND text_search_score > 0
+            )
+            LIMIT
+                10",
+            search_pattern_str,
+            query,
             search_pattern_str,
             search_pattern_str,
-            search_pattern_str
+            tag,
+            tag
         )
         .fetch_all(&self.pool)
         .await?)

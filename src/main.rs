@@ -4,7 +4,6 @@ use anyhow as _;
 use async_trait as _;
 use chrono as _;
 use dirs as _;
-use futures as _;
 use rmcp_macros as _;
 use schemars as _;
 use serde as _;
@@ -45,6 +44,8 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    use futures::TryFutureExt;
+
     dotenv().ok();
 
     let cli = Cli::from_args();
@@ -57,10 +58,9 @@ async fn main() -> Result<()> {
         .expect("must succeed")
         .join(env!("CARGO_PKG_NAME"))
         .join("logs");
-    tokio::fs::create_dir_all(&rolling_log_file_directory_path).await?;
 
     let rolling_file_appender =
-        tracing_appender::rolling::daily(rolling_log_file_directory_path, "");
+        tracing_appender::rolling::daily(&rolling_log_file_directory_path, "");
 
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env().add_directive(tracing::Level::DEBUG.into()))
@@ -70,7 +70,10 @@ async fn main() -> Result<()> {
 
     tracing::info!("Starting the MCP server…");
 
-    let server = BearMcpServer::new(bear_db_path).await?;
+    let (server, _) = futures_util::try_join! {
+        BearMcpServer::new(bear_db_path),
+        tokio::fs::create_dir_all(&rolling_log_file_directory_path).err_into()
+    }?;
 
     tracing::info!("Initialised the server.");
 

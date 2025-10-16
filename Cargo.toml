@@ -16,6 +16,7 @@ chrono = "0.4"
 dirs = "6"
 dotenv = "0.15"
 futures = "0.3"
+futures-util = "0.3"
 rmcp = { version = "0.8", features = ["server", "transport-io"] }
 rmcp-macros = "0.8"
 schemars = "1"
