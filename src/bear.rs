@@ -49,7 +49,7 @@ impl BearDatabase {
         let search_pattern: Option<String> = query.map(|query| format!("%{query}%"));
         let search_pattern_str = search_pattern.as_deref();
 
-        Ok(sqlx::query_as!(
+        let notes = sqlx::query_as!(
             Note,
             "SELECT
                 creation_date AS 'creation_date!: AppleCoreDateTime',
@@ -82,6 +82,10 @@ impl BearDatabase {
                 WHERE 
                     (? IS NULL OR tags.ZTITLE = ?)
                     AND text_search_score > 0
+                GROUP BY
+                    id
+                ORDER BY
+                    text_search_score DESC
             )
             LIMIT
                 10",
@@ -93,7 +97,9 @@ impl BearDatabase {
             tag
         )
         .fetch_all(&self.pool)
-        .await?)
+        .await?;
+
+        Ok(notes)
     }
 
     pub async fn list_tags(&self) -> Result<Vec<String>> {
