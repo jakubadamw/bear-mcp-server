@@ -12,6 +12,11 @@ use sqlx as _;
 use structopt as _;
 use thiserror as _;
 
+#[cfg(test)]
+use insta as _;
+#[cfg(test)]
+use rstest as _;
+
 use bear_mcp_server::Result;
 use bear_mcp_server::mcp::BearMcpServer;
 use dotenv::dotenv;

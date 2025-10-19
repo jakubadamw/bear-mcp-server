@@ -15,5 +15,7 @@ use tracing_subscriber as _;
 pub mod bear;
 pub mod error;
 pub mod mcp;
+#[cfg(test)]
+mod tests;
 
 pub use error::{Error, Result};

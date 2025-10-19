@@ -2,7 +2,7 @@ use crate::Result;
 
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(sqlx::Type)]
 #[sqlx(transparent)]
@@ -19,7 +19,7 @@ impl From<AppleCoreDateTime> for chrono::DateTime<chrono::Utc> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, sqlx::FromRow)]
 pub struct Note {
     #[sqlx(try_from = "AppleCoreDateTime")]
     creation_date: chrono::DateTime<chrono::Utc>,
@@ -39,8 +39,8 @@ pub struct BearDatabase {
 }
 
 impl BearDatabase {
-    pub async fn new(db_path: PathBuf) -> Result<Self> {
-        let database_url = format!("sqlite://{}?mode=ro", db_path.display());
+    pub async fn new(db_path: impl AsRef<Path>) -> Result<Self> {
+        let database_url = format!("sqlite://{}?mode=ro", db_path.as_ref().display());
         let pool = SqlitePool::connect(&database_url).await?;
         Ok(Self { pool })
     }
@@ -49,7 +49,7 @@ impl BearDatabase {
         let search_pattern: Option<String> = query.map(|query| format!("%{query}%"));
         let search_pattern_str = search_pattern.as_deref();
 
-        let notes = sqlx::query_as!(
+        Ok(sqlx::query_as!(
             Note,
             "SELECT
                 creation_date AS 'creation_date!: AppleCoreDateTime',
@@ -97,9 +97,7 @@ impl BearDatabase {
             tag
         )
         .fetch_all(&self.pool)
-        .await?;
-
-        Ok(notes)
+        .await?)
     }
 
     pub async fn list_tags(&self) -> Result<Vec<String>> {
