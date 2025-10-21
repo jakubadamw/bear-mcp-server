@@ -8,6 +8,7 @@ description = "A Model Context Protocol server for Bear.app"
 homepage = "https://github.com/jakubadamw/bear-mcp-server"
 repository = "https://github.com/jakubadamw/bear-mcp-server"
 documentation = "https://github.com/jakubadamw/bear-mcp-server"
+build = "build.rs"
 
 [dependencies]
 anyhow = "1"
@@ -33,3 +34,6 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 [dev-dependencies]
 insta = { version = "1", features = ["json"] }
 rstest = "0.24"
+
+[build-dependencies]
+rusqlite = { version = "0.32", features = ["functions"] }

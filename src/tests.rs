@@ -14,11 +14,7 @@ async fn test_list_notes(
     #[case] query: Option<&str>,
     #[case] tag: Option<&str>,
 ) {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_PATH"))
-        .parent()
-        .expect("must have a parent")
-        .join("test_data")
-        .join("database.sqlite");
+    let path = PathBuf::from(env!("OUT_DIR")).join("test_database.sqlite");
 
     let bear_database = BearDatabase::new(path).await.expect("must succeed");
     let result = bear_database
