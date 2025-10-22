@@ -61,7 +61,7 @@ impl BearMcpServer {
                         raw: RawContent::Text(text),
                         ..
                     },
-                ] => text.text.bytes().len() as u64,
+                ] => text.text.len() as u64,
                 value => panic!("unexpected value: {value:?}"),
             };
 
