@@ -18,7 +18,7 @@ async fn test_list_notes(
 
     let bear_database = BearDatabase::new(path).await.expect("must succeed");
     let result = bear_database
-        .list_notes(query, tag)
+        .list_notes(query, tag, 16)
         .await
         .expect("must succeed");
     let snapshot_file_name = format!("test_list_notes_{index:02}");

@@ -45,7 +45,12 @@ impl BearDatabase {
         Ok(Self { pool })
     }
 
-    pub async fn list_notes(&self, query: Option<&str>, tag: Option<&str>) -> Result<Vec<Note>> {
+    pub async fn list_notes(
+        &self,
+        query: Option<&str>,
+        tag: Option<&str>,
+        limit: u32,
+    ) -> Result<Vec<Note>> {
         let search_pattern: Option<String> = query.map(|query| format!("%{query}%"));
         let search_pattern_str = search_pattern.as_deref();
 
@@ -88,13 +93,14 @@ impl BearDatabase {
                     text_search_score DESC
             )
             LIMIT
-                10",
+                ?",
             search_pattern_str,
             query,
             search_pattern_str,
             search_pattern_str,
             tag,
-            tag
+            tag,
+            limit
         )
         .fetch_all(&self.pool)
         .await?)

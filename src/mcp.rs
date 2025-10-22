@@ -1,4 +1,5 @@
 use crate::bear::BearDatabase;
+use byte_unit::{Byte, Unit};
 use rmcp::{
     ErrorData as McpError,
     handler::server::{tool::ToolRouter, wrapper::Parameters},
@@ -22,6 +23,8 @@ pub struct SearchRequest {
     pub tag: Option<String>,
 }
 
+const RESPONSE_LIMIT: u64 = Byte::from_u64_with_unit(9, Unit::MB).unwrap().as_u64();
+
 #[tool_router]
 impl BearMcpServer {
     pub async fn new(db_path: std::path::PathBuf) -> crate::Result<Self> {
@@ -42,14 +45,34 @@ impl BearMcpServer {
             notes: T,
         }
 
-        let tag_noramlized = tag.as_deref().map(|tag| tag.trim_start_matches('#'));
-
+        let tag_normalized = tag.as_deref().map(|tag| tag.trim_start_matches('#'));
         let database = self.bear_database.lock().await;
-        let notes = database
-            .list_notes(query.as_deref(), tag_noramlized)
-            .await?;
-        let response = NotesResponse { notes };
-        Ok(CallToolResult::success(vec![Content::json(&response)?]))
+
+        let mut limit = 2u32.pow(16);
+        while limit > 1 {
+            let notes = database
+                .list_notes(query.as_deref(), tag_normalized, limit)
+                .await?;
+            let response = NotesResponse { notes };
+            let response = CallToolResult::success(vec![Content::json(&response)?]);
+            let response_content_size = match response.content.as_slice() {
+                [
+                    Annotated {
+                        raw: RawContent::Text(text),
+                        ..
+                    },
+                ] => text.text.bytes().len() as u64,
+                value => panic!("unexpected value: {value:?}"),
+            };
+
+            if response_content_size > RESPONSE_LIMIT {
+                limit /= 2;
+            } else {
+                return Ok(response);
+            }
+        }
+
+        panic!("could not produce a response due to response limits being hit")
     }
 
     #[tool(description = "List tags")]

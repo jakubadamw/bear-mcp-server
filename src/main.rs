@@ -2,6 +2,7 @@
 
 use anyhow as _;
 use async_trait as _;
+use byte_unit as _;
 use chrono as _;
 use dirs as _;
 use rmcp_macros as _;
